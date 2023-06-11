@@ -83,8 +83,11 @@ func (x *Handler) Handle(ctx context.Context, record slog.Record) error {
 		Level:     record.Level.String(),
 		Message:   record.Message,
 	}
+	if record.Time.IsZero() {
+		log.Timestamp = "(no time)"
+	}
 
-	if x.cfg.addSource {
+	if x.cfg.addSource && record.PC != 0 {
 		src := getSource(record.PC)
 		log.FileName = filepath.Base(src.FilePath)
 		log.FilePath = src.FilePath
@@ -145,6 +148,10 @@ func printHandlerAttrs(p AttrPrinter, st *stack) {
 
 func printAttrs(p AttrPrinter, attrs []slog.Attr) {
 	for _, attr := range attrs {
+		if attr.Equal(slog.Attr{}) {
+			continue // ignored
+		}
+
 		switch attr.Value.Kind() {
 		case slog.KindGroup:
 			p.Enter(attr.Key)
@@ -160,7 +167,7 @@ func printAttrs(p AttrPrinter, attrs []slog.Attr) {
 // WithAttrs implements slog.Handler.
 func (x *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	newHandler := x.clone()
-	newHandler.attrs = append(newHandler.attrs, attrs...)
+	newHandler.attrs = attrs
 	return newHandler
 }
 

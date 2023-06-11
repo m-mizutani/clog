@@ -87,3 +87,21 @@ func TestGroupInGroup(t *testing.T) {
 		})
 	}
 }
+
+func TestWithAttrs(t *testing.T) {
+	w := &bytes.Buffer{}
+	logger := slog.New(clog.New(
+		clog.WithColor(false),
+		clog.WithWriter(w),
+	))
+	logger.
+		With(slog.String("foo", "bar")).
+		With(slog.String("hoge", "fuga")).
+		Info("hello, world!")
+
+	gt.String(t, w.String()).
+		Contains("INFO").
+		Contains("hello, world!").
+		Contains(`foo="bar"`).
+		Contains(`hoge="fuga"`)
+}
