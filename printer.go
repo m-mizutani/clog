@@ -112,6 +112,10 @@ func (x *prettyPrinter) Print(attr slog.Attr) {
 
 	p = fmt.Fprint
 	p(x.w, " => ")
+
+	if x.cfg.replaceAttr != nil {
+		attr = x.cfg.replaceAttr(x.groups, attr)
+	}
 	x.printer.Fprint(x.w, attr.Value.Resolve().Any())
 }
 
