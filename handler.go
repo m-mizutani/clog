@@ -89,7 +89,7 @@ func (x *Handler) Handle(ctx context.Context, record slog.Record) error {
 		log.FileName = filepath.Base(src.FilePath)
 		log.FilePath = src.FilePath
 		log.FuncName = src.Func
-		log.FuncLine = src.Line
+		log.FileLine = src.Line
 	}
 
 	if x.cfg.enableColor {
@@ -106,7 +106,7 @@ func (x *Handler) Handle(ctx context.Context, record slog.Record) error {
 		return true
 	})
 
-	printer := x.cfg.printer(buf)
+	printer := x.cfg.newPrinter(buf, x.cfg)
 	st := &stack{}
 	for handler := x; handler != nil; handler = handler.parent {
 		st.push(handler)

@@ -2,6 +2,7 @@ package clog_test
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/m-mizutani/clog"
@@ -86,4 +87,11 @@ func TestGroupInGroup(t *testing.T) {
 				Contains("group1.group2.foo=bar")
 		})
 	}
+}
+
+func TestEnv(t *testing.T) {
+	for _, v := range os.Environ() {
+		t.Log(v)
+	}
+	t.Fail()
 }

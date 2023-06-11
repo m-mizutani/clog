@@ -8,21 +8,25 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-type ColorSet struct {
+type ColorMap struct {
 	Level        map[slog.Level]*color.Color
 	LevelDefault *color.Color
 
 	Time    *color.Color
 	Message *color.Color
+
+	// Whether AttrKey and AttrValue color settings are used or not depends on the AttrPrinter
+	AttrKey   *color.Color
+	AttrValue *color.Color
 }
 
 var (
-	defaultColorSet    *ColorSet
+	defaultColorMap    *ColorMap
 	enableColorDefault = false
 )
 
 func init() {
-	defaultColorSet = &ColorSet{
+	defaultColorMap = &ColorMap{
 		Level: map[slog.Level]*color.Color{
 			slog.LevelDebug: color.New(color.FgWhite, color.Bold),
 			slog.LevelInfo:  color.New(color.FgCyan, color.Bold),
@@ -32,6 +36,9 @@ func init() {
 		LevelDefault: color.New(color.FgBlue, color.Bold),
 		Time:         color.New(color.FgWhite),
 		Message:      color.New(color.FgHiWhite),
+
+		AttrKey:   color.New(color.FgWhite),
+		AttrValue: color.New(color.FgHiWhite),
 	}
 
 	colorTerminals := []string{

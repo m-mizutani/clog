@@ -13,7 +13,7 @@ type Log struct {
 	// Timestamp is a time when the log is recorded. Format can be specified by WithTimeFmt.
 	Timestamp string
 
-	// Elapsed is a time elapsed from the start of the program.
+	// Elapsed is duration from the start of the program.
 	Elapsed float64
 
 	// Level is a log level. It is one of "DEBUG", "INFO", "WARN", "ERROR", "FATAL".
@@ -28,21 +28,31 @@ type Log struct {
 	// FilePath is a full file path of the source code that calls logger. It is empty if WithSource is not specified.
 	FilePath string
 
+	// FileLine is a line number of the source code that calls logger. It is empty if WithSource is not specified.
+	FileLine int
+
 	// FuncName is a function name of the source code that calls logger. It is empty if WithSource is not specified.
 	FuncName string
-
-	// FuncLine is a line number of the source code that calls logger. It is empty if WithSource is not specified.
-	FuncLine int
 }
 
-func (x *Log) Coloring(colors *ColorSet) *Log {
+func (x *Log) Coloring(colors *ColorMap) *Log {
 	if colors == nil {
 		return x
 	}
 
-	x.Level = colors.Level[slog.Level(x.logLevel)].SprintFunc()(x.Level)
-	x.Timestamp = colors.Time.SprintFunc()(x.Timestamp)
-	x.Message = colors.Message.SprintFunc()(x.Message)
+	if c, ok := colors.Level[slog.Level(x.logLevel)]; ok {
+		x.Level = c.SprintFunc()(x.Level)
+	} else if colors.LevelDefault != nil {
+		x.Level = colors.LevelDefault.SprintFunc()(x.Level)
+	}
+
+	if colors.Time != nil {
+		x.Timestamp = colors.Time.SprintFunc()(x.Timestamp)
+	}
+
+	if colors.Message != nil {
+		x.Message = colors.Message.SprintFunc()(x.Message)
+	}
 
 	return x
 }

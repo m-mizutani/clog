@@ -17,8 +17,8 @@ type config struct {
 	addSource   bool
 	enableColor bool
 	replaceAttr func(groups []string, a slog.Attr) slog.Attr
-	printer     func(w io.Writer) AttrPrinter
-	colors      *ColorSet
+	newPrinter  func(io.Writer, *config) AttrPrinter
+	colors      *ColorMap
 	tmpl        *template.Template
 }
 
@@ -26,17 +26,17 @@ func newConfig() *config {
 	return &config{
 		w:           os.Stdout,
 		level:       slog.LevelInfo,
-		timeFmt:     "2006-01-02 15:04:05",
+		timeFmt:     "15:04:05.000",
 		addSource:   false,
 		enableColor: enableColorDefault,
-		printer:     LinearPrinter,
+		newPrinter:  LinearPrinter,
 
-		colors: defaultColorSet,
+		colors: defaultColorMap,
 		tmpl:   defaultTmpl,
 	}
 }
 
-const DefaultTemplate = `{{.Elapsed | printf "%8.3f" }} {{.Level}} {{ if .FileName }}[{{.FileName}}:{{.FuncLine}}] {{ end }}{{.Message}} `
+const DefaultTemplate = `{{.Elapsed | printf "%8.3f" }} {{.Level}} {{ if .FileName }}[{{.FileName}}:{{.FileLine}}] {{ end }}{{.Message}} `
 
 var defaultTmpl *template.Template
 
@@ -78,6 +78,13 @@ func WithColor(color bool) Option {
 	}
 }
 
+// WithColorMap sets the color set for the handler.
+func WithColorMap(colors *ColorMap) Option {
+	return func(cfg *config) {
+		cfg.colors = colors
+	}
+}
+
 // WithSource enables or disables adding the source attribute. The default is disable.
 func WithSource(addSource bool) Option {
 	return func(cfg *config) {
@@ -93,16 +100,9 @@ func WithReplaceAttr(replaceAttr func(groups []string, a slog.Attr) slog.Attr) O
 }
 
 // WithPrinter sets the printer for printing attributes. The default is LinearPrinter.
-func WithPrinter(printer func(w io.Writer) AttrPrinter) Option {
+func WithPrinter(printer func(io.Writer, *config) AttrPrinter) Option {
 	return func(cfg *config) {
-		cfg.printer = printer
-	}
-}
-
-// WithColorSet sets the color set for the handler.
-func WithColorSet(colors *ColorSet) Option {
-	return func(cfg *config) {
-		cfg.colors = colors
+		cfg.newPrinter = printer
 	}
 }
 
@@ -118,7 +118,7 @@ func WithTemplate(tmpl *template.Template) Option {
 			FileName:  "foo.go",
 			FilePath:  "/path/to/foo.go",
 			FuncName:  "main",
-			FuncLine:  10,
+			FileLine:  10,
 		}
 		var buf bytes.Buffer
 		if err := tmpl.Execute(&buf, log); err != nil {
