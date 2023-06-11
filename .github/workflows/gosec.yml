@@ -8,6 +8,12 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
     env:
       GO111MODULE: on
     steps:
