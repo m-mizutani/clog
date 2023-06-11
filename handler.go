@@ -74,6 +74,7 @@ func (x *stack) pop() *Handler {
 
 // Handle implements slog.Handler.
 func (x *Handler) Handle(ctx context.Context, record slog.Record) error {
+	x = x.clone()
 	buf := &bytes.Buffer{}
 
 	log := &Log{
