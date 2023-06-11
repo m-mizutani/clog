@@ -20,7 +20,7 @@ func TestWithGroup(t *testing.T) {
 	gt.String(t, w.String()).
 		Contains("INFO").
 		Contains("hello, world!").
-		Contains("group1.foo=bar")
+		Contains(`group1.foo="bar"`)
 }
 
 func TestGroup(t *testing.T) {
@@ -34,7 +34,7 @@ func TestGroup(t *testing.T) {
 	gt.String(t, w.String()).
 		Contains("INFO").
 		Contains("hello, world!").
-		Contains("group1.foo=bar")
+		Contains(`group1.foo="bar"`)
 }
 
 func TestGroupInGroup(t *testing.T) {
@@ -83,7 +83,7 @@ func TestGroupInGroup(t *testing.T) {
 			gt.String(t, w.String()).
 				Contains("INFO").
 				Contains("hello, world!").
-				Contains("group1.group2.foo=bar")
+				Contains(`group1.group2.foo="bar"`)
 		})
 	}
 }
