@@ -62,19 +62,19 @@ func (x *linearPrinter) Print(attr slog.Attr) {
 	if x.cfg.enableColor && x.cfg.colors.AttrKey != nil {
 		p = x.cfg.colors.AttrKey.Fprint
 	}
-	p(x.w, key)
+	_, _ = p(x.w, key)
 
 	p = fmt.Fprint
-	p(x.w, "=")
+	_, _ = p(x.w, "=")
 
 	if x.cfg.enableColor && x.cfg.colors.AttrValue != nil {
 		p = x.cfg.colors.AttrValue.Fprint
 	}
 
 	value := valueToString(attr.Value.Resolve())
-	p(x.w, value)
+	_, _ = p(x.w, value)
 	p = fmt.Fprint
-	p(x.w, " ")
+	_, _ = p(x.w, " ")
 }
 
 // PrettyPrinter is a printer that prints attributes in a pretty format.
@@ -104,20 +104,20 @@ func (x *prettyPrinter) Print(attr slog.Attr) {
 	}
 
 	p := fmt.Fprint
-	p(x.w, "\n")
+	_, _ = p(x.w, "\n")
 
 	if x.cfg.enableColor && x.cfg.colors.AttrKey != nil {
 		p = x.cfg.colors.AttrKey.Fprint
 	}
-	p(x.w, key)
+	_, _ = p(x.w, key)
 
 	p = fmt.Fprint
-	p(x.w, " => ")
+	_, _ = p(x.w, " => ")
 
 	if x.cfg.replaceAttr != nil {
 		attr = x.cfg.replaceAttr(x.groups, attr)
 	}
-	x.printer.Fprint(x.w, attr.Value.Resolve().Any())
+	_, _ = x.printer.Fprint(x.w, attr.Value.Resolve().Any())
 }
 
 // IndentPrinter is a printer that prints attributes in a indented format.
@@ -154,7 +154,7 @@ func (x *indentPrinter) Print(attr slog.Attr) {
 		value = x.cfg.colors.AttrValue.Sprint(value)
 	}
 
-	fmt.Fprintf(x.w, "\n%s%s: %s", indent, key, value)
+	_, _ = fmt.Fprintf(x.w, "\n%s%s: %s", indent, key, value)
 }
 
 func valueToString(value slog.Value) string {
