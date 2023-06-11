@@ -104,4 +104,29 @@ func TestWithAttrs(t *testing.T) {
 		Contains("hello, world!").
 		Contains(`foo="bar"`).
 		Contains(`hoge="fuga"`)
+
+	w.Reset()
+	logger.
+		With(slog.String("color", "red")).
+		Info("good bye!")
+	gt.String(t, w.String()).
+		Contains("good bye!").
+		Contains(`color="red"`).
+		NotContains(`foo="bar"`)
+}
+
+func TestAttr(t *testing.T) {
+	w := &bytes.Buffer{}
+	logger := slog.New(clog.New(
+		clog.WithColor(false),
+		clog.WithWriter(w),
+	))
+	logger.Info("hello, world!", slog.String("foo", "bar"))
+	gt.String(t, w.String()).Contains(`foo="bar"`)
+
+	w.Reset()
+	logger.Info("hello, again!", slog.String("hoge", "fuga"))
+	gt.String(t, w.String()).
+		Contains(`hoge="fuga"`).
+		NotContains(`foo="bar"`)
 }
