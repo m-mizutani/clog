@@ -71,7 +71,8 @@ func (x *linearPrinter) Print(attr slog.Attr) {
 		p = x.cfg.colors.AttrValue.Fprint
 	}
 
-	p(x.w, attr.Value.Resolve().String())
+	value := valueToString(attr.Value.Resolve())
+	p(x.w, value)
 	p = fmt.Fprint
 	p(x.w, " ")
 }
@@ -131,13 +132,13 @@ type indentPrinter struct {
 }
 
 func (x *indentPrinter) Enter(group string) {
-	indent := "    " + strings.Repeat("  ", len(x.groups))
+	indent := strings.Repeat("  ", len(x.groups))
 	fmt.Fprintf(x.w, "\n%s%s:", indent, group)
 	x.basicPrinter.Enter(group)
 }
 
 func (x *indentPrinter) Print(attr slog.Attr) {
-	indent := "    " + strings.Repeat("  ", len(x.groups))
+	indent := strings.Repeat("  ", len(x.groups))
 
 	key := attr.Key
 	if x.cfg.enableColor && x.cfg.colors.AttrKey != nil {
@@ -147,10 +148,40 @@ func (x *indentPrinter) Print(attr slog.Attr) {
 	if x.cfg.replaceAttr != nil {
 		attr = x.cfg.replaceAttr(x.groups, attr)
 	}
-	value := attr.Value.Resolve().String()
+
+	value := valueToString(attr.Value.Resolve())
 	if x.cfg.enableColor && x.cfg.colors.AttrValue != nil {
 		value = x.cfg.colors.AttrValue.Sprint(value)
 	}
 
 	fmt.Fprintf(x.w, "\n%s%s: %s", indent, key, value)
+}
+
+func valueToString(value slog.Value) string {
+	switch value.Kind() {
+	case slog.KindBool:
+		return fmt.Sprintf("%v", value.Bool())
+	case slog.KindString:
+		return fmt.Sprintf("%q", value.String())
+	case slog.KindTime:
+		return fmt.Sprintf("%v", value.Time())
+	case slog.KindDuration:
+		return fmt.Sprintf("%v", value.Duration())
+	case slog.KindAny:
+		return fmt.Sprintf("%+v", value.Any())
+	case slog.KindFloat64:
+		return fmt.Sprintf("%v", value.Float64())
+	case slog.KindInt64:
+		return fmt.Sprintf("%v", value.Int64())
+	case slog.KindUint64:
+		return fmt.Sprintf("%v", value.Uint64())
+	case slog.KindLogValuer:
+		return value.LogValuer().LogValue().String()
+
+	// Should not happen, but just in
+	case slog.KindGroup:
+		return fmt.Sprintf("%+v", value.Group())
+	default:
+		return fmt.Sprintf("%+v", value.Any())
+	}
 }

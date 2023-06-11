@@ -23,7 +23,7 @@ func main() {
 }
 ```
 
-<img width="788" alt="Screenshot 2023-06-11 at 8 12 04" src="https://github.com/m-mizutani/clog/assets/605953/1456796f-043b-4237-9bfa-66f42151912c">
+<img width="997" alt="Screenshot 2023-06-11 at 10 41 29" src="https://github.com/m-mizutani/clog/assets/605953/2dcc46ac-2113-44e4-90d1-218bd5fcc12b">
 
 ## Options
 
@@ -69,7 +69,7 @@ Default is `clog.DefaultTemplate`.
 
 - `LinearPrinter`: Print attributes in a linear way.
 - `PrettyPrinter`: Print attributes with [pp](https://github.com/k0kubun/pp) package.
-- `IndentPrinter`: Print attributes with indent.
+- `IndentPrinter`: Print attributes with indent like YAML format.
 
 Full example is [here](./examples/attr_printer/main.go).
 
@@ -98,8 +98,7 @@ func main() {
 }
 ```
 
-<img width="1122" alt="Screenshot 2023-06-11 at 9 56 13" src="https://github.com/m-mizutani/clog/assets/605953/98025167-788f-4398-a99d-b8cd0a8b8f4a">
-
+<img width="1188" alt="Screenshot 2023-06-11 at 10 39 26" src="https://github.com/m-mizutani/clog/assets/605953/b184644f-080b-41a9-8e5f-16a80d019311">
 
 ## License
 

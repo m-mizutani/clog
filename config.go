@@ -36,7 +36,12 @@ func newConfig() *config {
 	}
 }
 
-const DefaultTemplate = `{{.Elapsed | printf "%8.3f" }} {{.Level}} {{ if .FileName }}[{{.FileName}}:{{.FileLine}}] {{ end }}{{.Message}} `
+const (
+	TemplateStandardWithElapsed = `{{.Elapsed | printf "%8.3f" }} {{.Level}} {{ if .FileName }}[{{.FileName}}:{{.FileLine}}] {{ end }}{{.Message}} `
+	TemplateStandardWithTime    = `{{.Timestamp}} {{.Level}} {{ if .FileName }}[{{.FileName}}:{{.FileLine}}] {{ end }}{{.Message}} `
+	TemplateStandard            = `{{.Level}} {{ if .FileName }}[{{.FileName}}:{{.FileLine}}] {{ end }}{{.Message}} `
+	DefaultTemplate             = TemplateStandardWithTime
+)
 
 var defaultTmpl *template.Template
 
