@@ -6,7 +6,7 @@ import (
 
 	"github.com/m-mizutani/clog"
 	"github.com/m-mizutani/gt"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 func TestWithGroup(t *testing.T) {

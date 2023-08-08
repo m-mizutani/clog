@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/m-mizutani/goerr"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 // Handler is a slog handler that writes logs to an io.Writer.

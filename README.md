@@ -7,7 +7,7 @@ package main
 
 import (
 	"github.com/m-mizutani/clog"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/k0kubun/pp/v3"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 type AttrPrinter interface {
