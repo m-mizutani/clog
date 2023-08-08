@@ -6,7 +6,7 @@ import (
 	"os"
 	"text/template"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 // config is the configuration for the handler. The struct is immutable after creation.

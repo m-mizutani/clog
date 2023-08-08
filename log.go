@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"time"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 type Log struct {

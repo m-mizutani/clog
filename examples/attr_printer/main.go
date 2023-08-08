@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/m-mizutani/clog"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 type User struct {

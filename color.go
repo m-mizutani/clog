@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 type ColorMap struct {
