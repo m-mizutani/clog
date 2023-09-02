@@ -5,8 +5,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/k0kubun/pp/v3"
 	"log/slog"
+
+	"github.com/k0kubun/pp/v3"
 )
 
 type AttrPrinter interface {
@@ -54,10 +55,6 @@ func (x *linearPrinter) Print(attr slog.Attr) {
 	}
 	key := keyPrefix + attr.Key
 
-	if x.cfg.replaceAttr != nil {
-		attr = x.cfg.replaceAttr(x.groups, attr)
-	}
-
 	p := fmt.Fprint
 	if x.cfg.enableColor && x.cfg.colors.AttrKey != nil {
 		p = x.cfg.colors.AttrKey.Fprint
@@ -71,7 +68,16 @@ func (x *linearPrinter) Print(attr slog.Attr) {
 		p = x.cfg.colors.AttrValue.Fprint
 	}
 
-	value := valueToString(attr.Value.Resolve())
+	attr = slog.Attr{
+		Key:   attr.Key,
+		Value: attr.Value.Resolve(),
+	}
+	if x.cfg.replaceAttr != nil {
+		attr = x.cfg.replaceAttr(x.groups, attr)
+	}
+
+	value := valueToString(attr.Value)
+
 	_, _ = p(x.w, value)
 	p = fmt.Fprint
 	_, _ = p(x.w, " ")
