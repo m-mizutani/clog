@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/m-mizutani/goerr"
 	"log/slog"
+
+	"github.com/m-mizutani/goerr"
 )
 
 // Handler is a slog handler that writes logs to an io.Writer.
@@ -163,6 +164,8 @@ func printAttrs(p AttrPrinter, attrs []slog.Attr) {
 			p.Print(attr)
 		}
 	}
+
+	p.Defer()
 }
 
 // WithAttrs implements slog.Handler.
