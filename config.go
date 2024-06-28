@@ -20,6 +20,7 @@ type config struct {
 	newPrinter  func(io.Writer, *config) AttrPrinter
 	colors      *ColorMap
 	tmpl        *template.Template
+	attrHooks   []AttrHook
 }
 
 func newConfig() *config {
@@ -131,5 +132,12 @@ func WithTemplate(tmpl *template.Template) Option {
 		}
 
 		cfg.tmpl = tmpl
+	}
+}
+
+// WithAttrHook adds an attribute hook to the handler. This option can be used with only LinearPrinter.
+func WithAttrHook(hook AttrHook) Option {
+	return func(cfg *config) {
+		cfg.attrHooks = append(cfg.attrHooks, hook)
 	}
 }

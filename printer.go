@@ -14,12 +14,14 @@ type AttrPrinter interface {
 	Enter(group string)
 	Exit(group string)
 	Print(attr slog.Attr)
+	Defer()
 }
 
 type basicPrinter struct {
 	w      io.Writer
 	cfg    *config
 	groups []string
+	defers []func(w io.Writer)
 }
 
 func newBasicPrinter(w io.Writer, cfg *config) basicPrinter {
@@ -35,6 +37,9 @@ func (x *basicPrinter) Enter(group string) {
 
 func (x *basicPrinter) Exit(group string) {
 	x.groups = x.groups[:len(x.groups)-1]
+}
+
+func (x *basicPrinter) Defer() {
 }
 
 // LinearPrinter is a printer that prints attributes in a linear format.
@@ -53,6 +58,20 @@ func (x *linearPrinter) Print(attr slog.Attr) {
 	if len(x.groups) > 0 {
 		keyPrefix = strings.Join(x.groups, ".") + "."
 	}
+
+	for _, hook := range x.cfg.attrHooks {
+		if handleAttr := hook(x.groups, attr); handleAttr != nil {
+			if handleAttr.Defer != nil {
+				x.defers = append(x.defers, handleAttr.Defer)
+			}
+
+			if handleAttr.NewAttr == nil {
+				return
+			}
+			attr = *handleAttr.NewAttr
+		}
+	}
+
 	key := keyPrefix + attr.Key
 
 	p := fmt.Fprint
@@ -81,6 +100,12 @@ func (x *linearPrinter) Print(attr slog.Attr) {
 	_, _ = p(x.w, value)
 	p = fmt.Fprint
 	_, _ = p(x.w, " ")
+}
+
+func (x *linearPrinter) Defer() {
+	for i := len(x.defers) - 1; i >= 0; i-- {
+		x.defers[i](x.w)
+	}
 }
 
 // PrettyPrinter is a printer that prints attributes in a pretty format.
