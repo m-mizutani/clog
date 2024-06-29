@@ -15,6 +15,7 @@ type AttrPrinter interface {
 	Exit(group string)
 	Print(attr slog.Attr)
 	Defer()
+	Groups() []string
 }
 
 type basicPrinter struct {
@@ -40,6 +41,10 @@ func (x *basicPrinter) Exit(group string) {
 }
 
 func (x *basicPrinter) Defer() {
+}
+
+func (x *basicPrinter) Groups() []string {
+	return x.groups
 }
 
 // LinearPrinter is a printer that prints attributes in a linear format.
@@ -87,14 +92,6 @@ func (x *linearPrinter) Print(attr slog.Attr) {
 		p = x.cfg.colors.AttrValue.Fprint
 	}
 
-	attr = slog.Attr{
-		Key:   attr.Key,
-		Value: attr.Value.Resolve(),
-	}
-	if x.cfg.replaceAttr != nil {
-		attr = x.cfg.replaceAttr(x.groups, attr)
-	}
-
 	value := valueToString(attr.Value)
 
 	_, _ = p(x.w, value)
@@ -130,10 +127,6 @@ func (x *prettyPrinter) Print(attr slog.Attr) {
 	}
 	key := keyPrefix + attr.Key
 
-	if x.cfg.replaceAttr != nil {
-		attr = x.cfg.replaceAttr(x.groups, attr)
-	}
-
 	p := fmt.Fprint
 	_, _ = p(x.w, "\n")
 
@@ -144,11 +137,7 @@ func (x *prettyPrinter) Print(attr slog.Attr) {
 
 	p = fmt.Fprint
 	_, _ = p(x.w, " => ")
-
-	if x.cfg.replaceAttr != nil {
-		attr = x.cfg.replaceAttr(x.groups, attr)
-	}
-	_, _ = x.printer.Fprint(x.w, attr.Value.Resolve().Any())
+	_, _ = x.printer.Fprint(x.w, attr.Value.Any())
 }
 
 // IndentPrinter is a printer that prints attributes in a indented format.
