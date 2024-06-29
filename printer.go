@@ -3,7 +3,6 @@ package clog
 import (
 	"fmt"
 	"io"
-	"reflect"
 	"strings"
 
 	"log/slog"
@@ -189,7 +188,7 @@ func valueToString(value slog.Value) string {
 	case slog.KindDuration:
 		return fmt.Sprintf("%v", value.Duration())
 	case slog.KindAny:
-		return anyToString(value.Any())
+		return fmt.Sprintf("%+v", value.Any())
 	case slog.KindFloat64:
 		return fmt.Sprintf("%v", value.Float64())
 	case slog.KindInt64:
@@ -205,12 +204,4 @@ func valueToString(value slog.Value) string {
 	default:
 		return fmt.Sprintf("%+v", value.Any())
 	}
-}
-
-func anyToString(v any) string {
-	// get type by reflection
-	t := reflect.ValueOf(v)
-	kind := t.Kind()
-	println("kind", kind)
-	return fmt.Sprintf("%+v", v)
 }
