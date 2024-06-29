@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"path/filepath"
 	"sync"
 
@@ -111,22 +112,30 @@ func (x *Handler) Handle(ctx context.Context, record slog.Record) error {
 		return true
 	})
 
-	printer := x.cfg.newPrinter(buf, x.cfg)
 	st := &stack{}
 	for handler := x; handler != nil; handler = handler.parent {
 		st.push(handler)
 	}
 
-	printHandlerAttrs(printer, st, func(g []string, a slog.Attr) slog.Attr {
-		newAttr := slog.Attr{
-			Key:   a.Key,
-			Value: a.Value.Resolve(),
-		}
-		if x.cfg.replaceAttr != nil && newAttr.Value.Kind() != slog.KindGroup {
-			newAttr = x.cfg.replaceAttr(g, newAttr)
-		}
-		return newAttr
-	})
+	p := &printer{
+		hooks: x.cfg.attrHooks,
+		resolver: func(g []string, a slog.Attr) slog.Attr {
+			newAttr := slog.Attr{
+				Key:   a.Key,
+				Value: a.Value.Resolve(),
+			}
+			if x.cfg.replaceAttr != nil && newAttr.Value.Kind() != slog.KindGroup {
+				newAttr = x.cfg.replaceAttr(g, newAttr)
+			}
+			return newAttr
+		},
+		attrPrinter: x.cfg.newAttrPrinter(buf, x.cfg),
+	}
+
+	p.printStack(st)
+	for i := len(p.defers) - 1; i >= 0; i-- {
+		p.defers[i](buf)
+	}
 
 	fmt.Fprint(buf, "\n")
 
@@ -141,43 +150,66 @@ func (x *Handler) Handle(ctx context.Context, record slog.Record) error {
 
 type resolver func(groups []string, attr slog.Attr) slog.Attr
 
-func printHandlerAttrs(p AttrPrinter, st *stack, r resolver) {
+type printer struct {
+	groups      []string
+	hooks       []AttrHook
+	defers      []func(w io.Writer)
+	resolver    resolver
+	attrPrinter AttrPrinter
+}
+
+func (x *printer) printStack(st *stack) {
 	h := st.pop()
 	if h == nil {
 		return
 	}
 
 	if h.group != "" {
-		p.Enter(h.group)
+		x.groups = append(x.groups, h.group)
 	}
 
-	printAttrs(p, h.attrs, r)
-	printHandlerAttrs(p, st, r)
+	for _, attr := range h.attrs {
+		x.printAttr(attr)
+	}
+	x.printStack(st)
 
 	if h.group != "" {
-		p.Exit(h.group)
+		x.groups = x.groups[:len(x.groups)-1]
 	}
 }
 
-func printAttrs(p AttrPrinter, attrs []slog.Attr, r resolver) {
-	for _, attr := range attrs {
-		if attr.Equal(slog.Attr{}) {
-			continue // ignored
-		}
-		attr = r(p.Groups(), attr)
+func (x *printer) printAttr(attr slog.Attr) {
+	if attr.Equal(slog.Attr{}) {
+		return
+	}
 
-		switch attr.Value.Kind() {
-		case slog.KindGroup:
-			p.Enter(attr.Key)
-			printAttrs(p, attr.Value.Group(), r)
-			p.Exit(attr.Key)
-
-		default:
-			p.Print(attr)
+	if len(x.hooks) > 0 {
+		for _, hook := range x.hooks {
+			if handle := hook(x.groups, attr); handle != nil {
+				if handle.Defer != nil {
+					x.defers = append(x.defers, handle.Defer)
+				}
+				if handle.NewAttr != nil {
+					attr = *handle.NewAttr
+				}
+			}
 		}
 	}
 
-	p.Defer()
+	attr = x.resolver(x.groups, attr)
+
+	if slog.KindGroup == attr.Value.Kind() {
+		x.groups = append(x.groups, attr.Key)
+	}
+
+	x.attrPrinter.Print(x.groups, attr)
+
+	if slog.KindGroup == attr.Value.Kind() {
+		for _, a := range attr.Value.Group() {
+			x.printAttr(a)
+		}
+		x.groups = x.groups[:len(x.groups)-1]
+	}
 }
 
 // WithAttrs implements slog.Handler.

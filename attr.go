@@ -12,7 +12,7 @@ import (
 // NOTE: This feature is experimental and may be changed in the future.
 // NOTE: This feature is available only in the LinearPrinter for now.
 type HandleAttr struct {
-	// NewAttr is a new attribute that replaces the original attribute. When this field is not nil, the original attribute is not printed.
+	// NewAttr is a new attribute that replaces the original attribute. When this field is not nil, the original attribute is printed.
 	NewAttr *slog.Attr
 
 	// Defer is a function that is called after the all attributes are printed.

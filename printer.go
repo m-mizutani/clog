@@ -11,18 +11,12 @@ import (
 )
 
 type AttrPrinter interface {
-	Enter(group string)
-	Exit(group string)
-	Print(attr slog.Attr)
-	Defer()
-	Groups() []string
+	Print(groups []string, attr slog.Attr)
 }
 
 type basicPrinter struct {
-	w      io.Writer
-	cfg    *config
-	groups []string
-	defers []func(w io.Writer)
+	w   io.Writer
+	cfg *config
 }
 
 func newBasicPrinter(w io.Writer, cfg *config) basicPrinter {
@@ -33,18 +27,12 @@ func newBasicPrinter(w io.Writer, cfg *config) basicPrinter {
 }
 
 func (x *basicPrinter) Enter(group string) {
-	x.groups = append(x.groups, group)
 }
 
 func (x *basicPrinter) Exit(group string) {
-	x.groups = x.groups[:len(x.groups)-1]
 }
 
 func (x *basicPrinter) Defer() {
-}
-
-func (x *basicPrinter) Groups() []string {
-	return x.groups
 }
 
 // LinearPrinter is a printer that prints attributes in a linear format.
@@ -58,23 +46,14 @@ type linearPrinter struct {
 	basicPrinter
 }
 
-func (x *linearPrinter) Print(attr slog.Attr) {
-	var keyPrefix string
-	if len(x.groups) > 0 {
-		keyPrefix = strings.Join(x.groups, ".") + "."
+func (x *linearPrinter) Print(groups []string, attr slog.Attr) {
+	if attr.Value.Kind() == slog.KindGroup {
+		return
 	}
 
-	for _, hook := range x.cfg.attrHooks {
-		if handleAttr := hook(x.groups, attr); handleAttr != nil {
-			if handleAttr.Defer != nil {
-				x.defers = append(x.defers, handleAttr.Defer)
-			}
-
-			if handleAttr.NewAttr == nil {
-				return
-			}
-			attr = *handleAttr.NewAttr
-		}
+	var keyPrefix string
+	if len(groups) > 0 {
+		keyPrefix = strings.Join(groups, ".") + "."
 	}
 
 	key := keyPrefix + attr.Key
@@ -99,12 +78,6 @@ func (x *linearPrinter) Print(attr slog.Attr) {
 	_, _ = p(x.w, " ")
 }
 
-func (x *linearPrinter) Defer() {
-	for i := len(x.defers) - 1; i >= 0; i-- {
-		x.defers[i](x.w)
-	}
-}
-
 // PrettyPrinter is a printer that prints attributes in a pretty format.
 func PrettyPrinter(w io.Writer, cfg *config) AttrPrinter {
 	p := &prettyPrinter{
@@ -120,10 +93,10 @@ type prettyPrinter struct {
 	basicPrinter
 }
 
-func (x *prettyPrinter) Print(attr slog.Attr) {
+func (x *prettyPrinter) Print(groups []string, attr slog.Attr) {
 	var keyPrefix string
-	if len(x.groups) > 0 {
-		keyPrefix = strings.Join(x.groups, ".") + "."
+	if len(groups) > 0 {
+		keyPrefix = strings.Join(groups, ".") + "."
 	}
 	key := keyPrefix + attr.Key
 
@@ -151,14 +124,14 @@ type indentPrinter struct {
 	basicPrinter
 }
 
-func (x *indentPrinter) Enter(group string) {
-	indent := strings.Repeat("  ", len(x.groups))
-	fmt.Fprintf(x.w, "\n%s%s:", indent, group)
-	x.basicPrinter.Enter(group)
-}
+func (x *indentPrinter) Print(groups []string, attr slog.Attr) {
+	if attr.Value.Kind() == slog.KindGroup {
+		indent := strings.Repeat("  ", len(groups))
+		_, _ = fmt.Fprintf(x.w, "\n%s%s:", indent, attr.Key)
+		return
+	}
 
-func (x *indentPrinter) Print(attr slog.Attr) {
-	indent := strings.Repeat("  ", len(x.groups))
+	indent := strings.Repeat("  ", len(groups))
 
 	key := attr.Key
 	if x.cfg.enableColor && x.cfg.colors.AttrKey != nil {
@@ -166,7 +139,7 @@ func (x *indentPrinter) Print(attr slog.Attr) {
 	}
 
 	if x.cfg.replaceAttr != nil {
-		attr = x.cfg.replaceAttr(x.groups, attr)
+		attr = x.cfg.replaceAttr(groups, attr)
 	}
 
 	value := valueToString(attr.Value.Resolve())
