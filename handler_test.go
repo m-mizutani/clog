@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"testing"
 
+	"log/slog"
+
 	"github.com/m-mizutani/clog"
 	"github.com/m-mizutani/gt"
-	"log/slog"
 )
 
 func TestWithGroup(t *testing.T) {
@@ -130,3 +131,25 @@ func TestAttr(t *testing.T) {
 		Contains(`hoge="fuga"`).
 		NotContains(`foo="bar"`)
 }
+
+// NOTE: This test is disabled for reducing unnecessary dependencies.
+// If you need to test this feature, please get github.com/m-mizutani/masq and enable this test.
+/*
+type logV struct{}
+
+func (v logV) LogValue() slog.Value {
+	return slog.GroupValue(slog.String("v", "logV"))
+}
+
+func TestLogValuer(t *testing.T) {
+	w := &bytes.Buffer{}
+	logger := slog.New(clog.New(
+		clog.WithColor(false),
+		clog.WithWriter(w),
+		clog.WithReplaceAttr(masq.New()),
+	))
+	logger.Info("hello, world!", slog.Any("g", logV{}))
+
+	gt.String(t, w.String()).Contains(`v="logV"`)
+}
+*/

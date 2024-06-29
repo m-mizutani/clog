@@ -117,7 +117,16 @@ func (x *Handler) Handle(ctx context.Context, record slog.Record) error {
 		st.push(handler)
 	}
 
-	printHandlerAttrs(printer, st)
+	printHandlerAttrs(printer, st, func(g []string, a slog.Attr) slog.Attr {
+		newAttr := slog.Attr{
+			Key:   a.Key,
+			Value: a.Value.Resolve(),
+		}
+		if x.cfg.replaceAttr != nil && newAttr.Value.Kind() != slog.KindGroup {
+			newAttr = x.cfg.replaceAttr(g, newAttr)
+		}
+		return newAttr
+	})
 
 	fmt.Fprint(buf, "\n")
 
@@ -130,7 +139,9 @@ func (x *Handler) Handle(ctx context.Context, record slog.Record) error {
 	return nil
 }
 
-func printHandlerAttrs(p AttrPrinter, st *stack) {
+type resolver func(groups []string, attr slog.Attr) slog.Attr
+
+func printHandlerAttrs(p AttrPrinter, st *stack, r resolver) {
 	h := st.pop()
 	if h == nil {
 		return
@@ -140,24 +151,25 @@ func printHandlerAttrs(p AttrPrinter, st *stack) {
 		p.Enter(h.group)
 	}
 
-	printAttrs(p, h.attrs)
-	printHandlerAttrs(p, st)
+	printAttrs(p, h.attrs, r)
+	printHandlerAttrs(p, st, r)
 
 	if h.group != "" {
 		p.Exit(h.group)
 	}
 }
 
-func printAttrs(p AttrPrinter, attrs []slog.Attr) {
+func printAttrs(p AttrPrinter, attrs []slog.Attr, r resolver) {
 	for _, attr := range attrs {
 		if attr.Equal(slog.Attr{}) {
 			continue // ignored
 		}
+		attr = r(p.Groups(), attr)
 
 		switch attr.Value.Kind() {
 		case slog.KindGroup:
 			p.Enter(attr.Key)
-			printAttrs(p, attr.Value.Group())
+			printAttrs(p, attr.Value.Group(), r)
 			p.Exit(attr.Key)
 
 		default:
