@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/m-mizutani/clog"
+	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/gt"
 )
 
@@ -91,4 +92,18 @@ func TestHandleAttr(t *testing.T) {
 				Contains(`number=5`)
 		},
 	}))
+}
+
+func TestGoerrHook(t *testing.T) {
+	var buf bytes.Buffer
+	logger := slog.New(clog.New(
+		clog.WithWriter(&buf),
+		clog.WithAttrHook(clog.GoerrHook),
+	))
+
+	logger.Error("hello, world!", "err", goerr.New("something wrong").With("foo", "bar"))
+	gt.S(t, buf.String()).
+		NotContains("err.stacktrace=").
+		Contains("Error: something wrong").
+		Contains(`foo="bar"`)
 }

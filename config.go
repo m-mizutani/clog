@@ -11,26 +11,26 @@ import (
 
 // config is the configuration for the handler. The struct is immutable after creation.
 type config struct {
-	w           io.Writer
-	level       slog.Leveler
-	timeFmt     string
-	addSource   bool
-	enableColor bool
-	replaceAttr func(groups []string, a slog.Attr) slog.Attr
-	newPrinter  func(io.Writer, *config) AttrPrinter
-	colors      *ColorMap
-	tmpl        *template.Template
-	attrHooks   []AttrHook
+	w              io.Writer
+	level          slog.Leveler
+	timeFmt        string
+	addSource      bool
+	enableColor    bool
+	replaceAttr    func(groups []string, a slog.Attr) slog.Attr
+	newAttrPrinter func(io.Writer, *config) AttrPrinter
+	colors         *ColorMap
+	tmpl           *template.Template
+	attrHooks      []AttrHook
 }
 
 func newConfig() *config {
 	return &config{
-		w:           os.Stdout,
-		level:       slog.LevelInfo,
-		timeFmt:     "15:04:05.000",
-		addSource:   false,
-		enableColor: enableColorDefault,
-		newPrinter:  LinearPrinter,
+		w:              os.Stdout,
+		level:          slog.LevelInfo,
+		timeFmt:        "15:04:05.000",
+		addSource:      false,
+		enableColor:    enableColorDefault,
+		newAttrPrinter: LinearPrinter,
 
 		colors: defaultColorMap,
 		tmpl:   defaultTmpl,
@@ -108,7 +108,7 @@ func WithReplaceAttr(replaceAttr func(groups []string, a slog.Attr) slog.Attr) O
 // WithPrinter sets the printer for printing attributes. The default is LinearPrinter.
 func WithPrinter(printer func(io.Writer, *config) AttrPrinter) Option {
 	return func(cfg *config) {
-		cfg.newPrinter = printer
+		cfg.newAttrPrinter = printer
 	}
 }
 
