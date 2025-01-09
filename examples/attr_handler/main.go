@@ -5,11 +5,11 @@ import (
 	"os"
 
 	"github.com/m-mizutani/clog"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 )
 
 func someAction(args string) error {
-	return goerr.New("something wrong").With("args", args)
+	return goerr.New("something wrong", goerr.V("args", args))
 }
 
 func main() {

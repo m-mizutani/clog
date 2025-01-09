@@ -5,7 +5,7 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 )
 
 // HandleAttr is a struct that describes how to handle an attribute.
