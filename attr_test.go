@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/m-mizutani/clog"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/m-mizutani/gt"
 )
 
@@ -101,7 +101,7 @@ func TestGoerrHook(t *testing.T) {
 		clog.WithAttrHook(clog.GoerrHook),
 	))
 
-	logger.Error("hello, world!", "err", goerr.New("something wrong").With("foo", "bar"))
+	logger.Error("hello, world!", "err", goerr.New("something wrong", goerr.V("foo", "bar")))
 	gt.S(t, buf.String()).
 		NotContains("err.stacktrace=").
 		Contains("Error: something wrong").
