@@ -36,6 +36,7 @@ func main() {
 - `WithReplaceAttr`: Replace attribute value. It's same with `slog.ReplaceAttr` in `slog.HandlerOptions`.
 - `WithTemplate`: Template string. See [Template](#template) section for more detail.
 - `WithAttrPrinter`: Attribute printer. Default is `clog.LinearPrinter`. See [AttrPrinter](#attrprinter) section for more detail.
+- `WithLevelFormatter`: Custom function to format log level strings. Default uses `level.String()`.
 
 ### ColorMap
 

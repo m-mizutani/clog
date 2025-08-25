@@ -153,3 +153,81 @@ func TestLogValuer(t *testing.T) {
 	gt.String(t, w.String()).Contains(`v="logV"`)
 }
 */
+
+func TestHandlerWithLevelFormatter(t *testing.T) {
+	// Test that custom level formatter is applied correctly
+	customFormatter := func(level slog.Level) string {
+		return "[" + level.String() + "]"
+	}
+
+	buf := &bytes.Buffer{}
+	handler := clog.New(
+		clog.WithWriter(buf),
+		clog.WithLevelFormatter(customFormatter),
+		clog.WithColor(false),
+	)
+	logger := slog.New(handler)
+
+	logger.Info("test message", slog.String("key", "value"))
+	output := buf.String()
+	gt.S(t, output).Contains("[INFO]")
+	gt.S(t, output).Contains("test message")
+	gt.S(t, output).Contains(`key="value"`)
+}
+
+func TestHandlerWithLevelFormatterAndColor(t *testing.T) {
+	// Test that level formatter works with color enabled
+	customFormatter := func(level slog.Level) string {
+		switch level {
+		case slog.LevelInfo:
+			return "INFO "
+		case slog.LevelWarn:
+			return "WARN "
+		case slog.LevelError:
+			return "ERROR"
+		default:
+			return level.String()
+		}
+	}
+
+	buf := &bytes.Buffer{}
+	handler := clog.New(
+		clog.WithWriter(buf),
+		clog.WithLevelFormatter(customFormatter),
+		clog.WithColor(true), // Color enabled
+	)
+	logger := slog.New(handler)
+
+	// Test different levels
+	logger.Info("info message")
+	logger.Warn("warn message")
+	logger.Error("error message")
+
+	output := buf.String()
+	// The formatted strings should be present (color codes will be added around them)
+	gt.S(t, output).Contains("INFO ")
+	gt.S(t, output).Contains("WARN ")
+	gt.S(t, output).Contains("ERROR")
+}
+
+func TestHandlerWithLevelFormatterAndGroup(t *testing.T) {
+	// Test that level formatter works with WithGroup
+	customFormatter := func(level slog.Level) string {
+		return "LEVEL:" + level.String()
+	}
+
+	buf := &bytes.Buffer{}
+	handler := clog.New(
+		clog.WithWriter(buf),
+		clog.WithLevelFormatter(customFormatter),
+		clog.WithColor(false),
+	)
+	logger := slog.New(handler)
+
+	logger.WithGroup("mygroup").Info("grouped message", slog.String("key", "value"))
+
+	output := buf.String()
+	gt.S(t, output).Contains("LEVEL:INFO")
+	gt.S(t, output).Contains("grouped message")
+	gt.S(t, output).Contains(`mygroup.key="value"`)
+}

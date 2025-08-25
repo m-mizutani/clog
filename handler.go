@@ -83,7 +83,7 @@ func (x *Handler) Handle(ctx context.Context, record slog.Record) error {
 		logLevel:  record.Level,
 		Timestamp: record.Time.Format(x.cfg.timeFmt),
 		Elapsed:   elapsedDuration(),
-		Level:     record.Level.String(),
+		Level:     x.cfg.levelFormatter(record.Level),
 		Message:   record.Message,
 	}
 	if record.Time.IsZero() {

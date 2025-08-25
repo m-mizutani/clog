@@ -21,6 +21,7 @@ type config struct {
 	colors         *ColorMap
 	tmpl           *template.Template
 	attrHooks      []AttrHook
+	levelFormatter func(slog.Level) string
 }
 
 func newConfig() *config {
@@ -32,8 +33,9 @@ func newConfig() *config {
 		enableColor:    enableColorDefault,
 		newAttrPrinter: LinearPrinter,
 
-		colors: defaultColorMap,
-		tmpl:   defaultTmpl,
+		colors:         defaultColorMap,
+		tmpl:           defaultTmpl,
+		levelFormatter: DefaultLevelFormatter,
 	}
 }
 
@@ -139,5 +141,22 @@ func WithTemplate(tmpl *template.Template) Option {
 func WithAttrHook(hook AttrHook) Option {
 	return func(cfg *config) {
 		cfg.attrHooks = append(cfg.attrHooks, hook)
+	}
+}
+
+// DefaultLevelFormatter is the default function for formatting log level strings.
+// This is exported so users can build custom formatters based on the default behavior.
+func DefaultLevelFormatter(level slog.Level) string {
+	return level.String()
+}
+
+// WithLevelFormatter sets the function for formatting log level strings.
+// The function receives a slog.Level and returns a formatted string.
+// If nil is passed, the default formatter is used.
+func WithLevelFormatter(f func(slog.Level) string) Option {
+	return func(cfg *config) {
+		if f != nil {
+			cfg.levelFormatter = f
+		}
 	}
 }
