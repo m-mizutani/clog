@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/m-mizutani/clog"
+	"github.com/m-mizutani/clog/hooks"
 	"github.com/m-mizutani/goerr/v2"
 )
 
@@ -18,7 +19,7 @@ func main() {
 	}
 
 	if _, ok := os.LookupEnv("HANDLE_ERROR"); ok {
-		options = append(options, clog.WithAttrHook(clog.GoerrHook))
+		options = append(options, clog.WithAttrHook(hooks.GoErr()))
 	}
 
 	logger := slog.New(clog.New(options...))

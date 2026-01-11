@@ -23,6 +23,9 @@ type HandleAttr struct {
 type AttrHook func(groups []string, attr slog.Attr) *HandleAttr
 
 // GoerrHook is a hook function that hides the goerr.Error attribute and prints the error message.
+//
+// Deprecated: Use hooks.GoErr() instead. This function will be removed in a future version.
+// The new hooks.GoErr() provides more options such as WithStackTrace to control stack trace output.
 func GoerrHook(_ []string, attr slog.Attr) *HandleAttr {
 	if goErr, ok := attr.Value.Any().(*goerr.Error); ok {
 		var attrs []any
@@ -34,7 +37,7 @@ func GoerrHook(_ []string, attr slog.Attr) *HandleAttr {
 		return &HandleAttr{
 			NewAttr: &newAttr,
 			Defer: func(w io.Writer) {
-				fmt.Fprintf(w, "Error: %+v", goErr)
+				_, _ = fmt.Fprintf(w, "Error: %+v", goErr)
 			},
 		}
 	}
